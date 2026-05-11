@@ -118,6 +118,23 @@ Finish the session to generate the final word cloud
 - [public](public) — static web files (HTML, JS, CSS, images)
 - [sessions](sessions) — JSON session files (runtime data)
 
+### Admin access and security
+
+- The admin area is now protected by a simple password-based login. Unauthenticated requests for the admin UI and its admin assets are redirected to `/admin-login.html`.
+- Default admin password: `changeme`. Set a stronger password before running in production by exporting `ADMIN_PASSWORD` in your environment. Example (PowerShell):
+
+  ```powershell
+  $env:ADMIN_PASSWORD = 'your-strong-password'
+  node server.js
+  ```
+
+- To sign in, open `/admin-login.html`, enter the password, and submit the form. A temporary admin token cookie is set for the session; you can sign out via the "Sign out" link in the admin UI which hits `/admin-logout`.
+- Note: admin tokens are stored in-memory by the server process. Restarting the server will invalidate tokens and require re-login.
+- For better security in production consider:
+  - Setting a strong `ADMIN_PASSWORD` and running the app behind HTTPS.
+  - Replacing the simple token store with persistent sessions (e.g. `express-session`) or integrating with an SSO/OAuth provider.
+  - Adding rate limiting and lockout for repeated failed login attempts.
+
 ### Notes
 
 - Session files in the `sessions` folder are plain JSON and may contain ephemeral or user session data. Do not commit sensitive session files to version control; add `sessions/` to `.gitignore` if you plan to keep local runtime data.
