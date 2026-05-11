@@ -18,6 +18,28 @@ if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR);
 // ── In-memory session state ───────────────────────────────────────────────────
 let state = createFreshState();
 
+// ── Simple admin auth (token stored in-memory) ─────────────────────────────────
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
+const ADMIN_COOKIE_NAME = 'admin-token';
+const validAdminTokens = new Set();
+
+function parseCookiesFromHeader(cookieHeader) {
+  if (!cookieHeader) return {};
+  return Object.fromEntries(
+    cookieHeader.split(/;\s*/).map((c) => {
+      const idx = c.indexOf('=');
+      if (idx === -1) return [c, ''];
+      return [decodeURIComponent(c.slice(0, idx)), decodeURIComponent(c.slice(idx + 1))];
+    })
+  );
+}
+
+function isRequestAuthenticated(req) {
+  const cookies = parseCookiesFromHeader(req.headers.cookie);
+  const token = cookies[ADMIN_COOKIE_NAME];
+  return token && validAdminTokens.has(token);
+}
+
 function createFreshState() {
   return {
     sessionId:     uuidv4(),
@@ -55,13 +77,17 @@ function publicState() {
 
 // ── Socket.IO ─────────────────────────────────────────────────────────────────
 io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
+  // Determine whether this socket belongs to an authenticated admin
+  const cookies = parseCookiesFromHeader(socket.handshake.headers.cookie);
+  socket.isAdmin = !!(cookies[ADMIN_COOKIE_NAME] && validAdminTokens.has(cookies[ADMIN_COOKIE_NAME]));
+  console.log('Client connected:', socket.id, 'isAdmin=', socket.isAdmin);
 
   // Send current state immediately on connect
   socket.emit('stateUpdate', publicState());
 
   // ── Admin: configure session ──────────────────────────────────────────────
   socket.on('setSolution', ({ word, revealOrder }) => {
+    if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     if (state.phase !== 'setup') return;
     state.solutionWord = word.toUpperCase().trim();
 
@@ -84,12 +110,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('setFinishImage', ({ dataUrl }) => {
+    if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     state.finishImage = dataUrl;
     io.emit('stateUpdate', publicState());
   });
 
   // ── Admin: start session (reveals first letter) ───────────────────────────
   socket.on('startSession', () => {
+    if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     if (state.phase !== 'setup' || !state.solutionWord) return;
     state.phase = 'active';
     state.startedAt = new Date().toISOString();
@@ -109,6 +137,7 @@ io.on('connection', (socket) => {
 
   // ── Admin: reveal next letter + clear live cloud ──────────────────────────
   socket.on('revealNext', () => {
+    if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     if (state.phase !== 'active') return;
     if (state.revealedCount >= state.revealOrder.length) return;
 
@@ -123,6 +152,7 @@ io.on('connection', (socket) => {
 
   // ── Admin: finish session ─────────────────────────────────────────────────
   socket.on('finishSession', () => {
+    if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     if (state.phase !== 'active') return;
     state.phase = 'finished';
     saveSession(state);
@@ -132,6 +162,7 @@ io.on('connection', (socket) => {
 
   // ── Admin: restart (new session, old one already persisted) ──────────────
   socket.on('restartSession', () => {
+    if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     state = createFreshState();
     io.emit('stateUpdate', publicState());
     io.emit('sessionRestarted');
@@ -139,6 +170,7 @@ io.on('connection', (socket) => {
 
   // ── Admin: list saved sessions ────────────────────────────────────────────
   socket.on('listSessions', () => {
+    if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     const files = fs.readdirSync(SESSIONS_DIR).filter((f) => f.endsWith('.json'));
     const sessions = files.map((f) => {
       const s = JSON.parse(fs.readFileSync(path.join(SESSIONS_DIR, f)));
@@ -154,6 +186,7 @@ io.on('connection', (socket) => {
 
   // ── Admin: load a past session for review ────────────────────────────────
   socket.on('loadSession', ({ sessionId }) => {
+    if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     const file = path.join(SESSIONS_DIR, `${sessionId}.json`);
     if (!fs.existsSync(file)) return;
     const s = JSON.parse(fs.readFileSync(file));
@@ -166,10 +199,48 @@ io.on('connection', (socket) => {
 });
 
 // ── Static files ──────────────────────────────────────────────────────────────
+// Parse form bodies for login
+app.use(express.urlencoded({ extended: false }));
+
+// Protect admin assets and /admin route by redirecting to a login page
+app.use((req, res, next) => {
+  const adminPaths = [
+    '/admin', '/admin.html', '/js/admin.js', '/css/admin.css'
+  ];
+  if (adminPaths.includes(req.path) || req.path.startsWith('/js/admin') || req.path.startsWith('/css/admin')) {
+    if (isRequestAuthenticated(req)) return next();
+    return res.redirect('/admin-login.html');
+  }
+  next();
+});
+
+// Serve static files after the auth guard so admin files are checked
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (_, res) => res.redirect('/audience.html'));
 app.get('/admin', (_, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+
+// Login endpoint
+app.post('/admin-login', (req, res) => {
+  const pw = req.body?.password || '';
+  if (pw === ADMIN_PASSWORD) {
+    const token = uuidv4();
+    validAdminTokens.add(token);
+    // Set cookie for admin token
+    res.cookie(ADMIN_COOKIE_NAME, token, { httpOnly: true, path: '/' });
+    return res.redirect('/admin');
+  }
+  return res.redirect('/admin-login.html?err=1');
+});
+
+// Logout
+app.get('/admin-logout', (req, res) => {
+  const cookies = parseCookiesFromHeader(req.headers.cookie);
+  const token = cookies[ADMIN_COOKIE_NAME];
+  if (token) validAdminTokens.delete(token);
+  res.clearCookie(ADMIN_COOKIE_NAME, { path: '/' });
+  res.redirect('/admin-login.html');
+});
 
 server.listen(PORT, () => {
   console.log(`\n  Word Cloud Server running at http://localhost:${PORT}`);
