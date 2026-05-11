@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Word Cloud – Audience View</title>
+  <link rel="stylesheet" href="/css/audience.css" />
+</head>
+<body>
+
+  <!-- ── Left Panel: Answer Boxes ── -->
+  <section id="answer-panel">
+    <div id="answer-label">?</div>
+    <div id="answer-boxes"></div>
+    <img id="elephant-art" src="/img/elephant.png" alt="Elegant elephant" />
+  </section>
+
+  <!-- ── Right Panel: Word Cloud ── -->
+  <section id="cloud-panel">
+    <div id="cloud-wrapper">
+      <canvas id="cloud-canvas"></canvas>
+      <div id="finish-overlay" class="hidden">
+        <img id="finish-img" src="" alt="Finish" />
+      </div>
+    </div>
+    <div id="phase-banner" class="hidden"></div>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
+  <script src="/js/audience.js"></script>
+</body>
+</html>

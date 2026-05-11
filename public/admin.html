@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Word Cloud – Admin</title>
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+
+  <header>
+    <h1>🎤 Word Cloud Admin</h1>
+    <div id="connection-status" class="badge badge--offline">Offline</div>
+  </header>
+
+  <main>
+
+    <!-- ══ SETUP CARD ══════════════════════════════════════════════════ -->
+    <section class="card" id="card-setup">
+      <h2>1 · Setup</h2>
+
+      <div class="field-group">
+        <label for="solution-input">Solution Word</label>
+        <input id="solution-input" type="text" placeholder="e.g. TEAMWORK" maxlength="100" autocomplete="off" />
+      </div>
+
+      <div class="field-group" id="reveal-order-group" style="display:none">
+        <label>Reveal Order <span class="hint">Drag to reorder</span></label>
+        <div id="reveal-order-list"></div>
+        <button class="btn btn--ghost btn--sm" id="btn-reset-order">Reset to default order</button>
+      </div>
+
+      <div class="field-group">
+        <label for="finish-image-input">Finish Picture <span class="hint">Optional – shown inside final cloud</span></label>
+        <input id="finish-image-input" type="file" accept="image/*" />
+        <div id="finish-preview-wrap" class="hidden">
+          <img id="finish-preview" src="" alt="Preview" />
+          <button class="btn btn--ghost btn--sm" id="btn-clear-image">Remove image</button>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn--primary" id="btn-apply-setup">Apply Setup</button>
+        <span class="hint" id="setup-status"></span>
+      </div>
+    </section>
+
+    <!-- ══ SESSION CONTROL CARD ═══════════════════════════════════════ -->
+    <section class="card" id="card-session">
+      <h2>2 · Session Control</h2>
+
+      <div id="session-state-display">
+        <div class="stat-row">
+          <span class="stat-label">Phase</span>
+          <span class="stat-value" id="stat-phase">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Solution</span>
+          <span class="stat-value" id="stat-solution">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Revealed</span>
+          <span class="stat-value" id="stat-revealed">0 / 0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Words (session)</span>
+          <span class="stat-value" id="stat-all-words">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Words (current cloud)</span>
+          <span class="stat-value" id="stat-current-words">0</span>
+        </div>
+      </div>
+
+      <!-- Letter boxes mini-preview -->
+      <div id="admin-letter-boxes"></div>
+
+      <div class="action-row flex-wrap">
+        <button class="btn btn--success" id="btn-start">▶ Start Session</button>
+        <button class="btn btn--warning" id="btn-reveal" disabled>→ Reveal Next Letter</button>
+        <button class="btn btn--danger"  id="btn-finish" disabled>⬛ Finish Session</button>
+        <button class="btn btn--ghost"   id="btn-restart">↺ Restart</button>
+      </div>
+
+      <div id="audience-link-hint">
+        Audience view: <a href="/audience.html" target="_blank">/audience.html</a>
+      </div>
+    </section>
+
+    <!-- ══ WORD INPUT CARD ═════════════════════════════════════════════ -->
+    <section class="card" id="card-words">
+      <h2>3 · Word Input</h2>
+
+      <div class="field-group">
+        <label for="word-input">Enter Word / Phrase</label>
+        <div class="input-row">
+          <input id="word-input" type="text" placeholder="Type a word and press Enter…" autocomplete="off" disabled />
+          <button class="btn btn--primary" id="btn-add-word" disabled>Add</button>
+        </div>
+      </div>
+
+      <div id="word-log">
+        <div class="word-log-header">
+          <span>Current Cloud Words</span>
+          <span id="cloud-word-count">0 words</span>
+        </div>
+        <ul id="word-log-list"></ul>
+      </div>
+    </section>
+
+    <!-- ══ SAVED SESSIONS CARD ════════════════════════════════════════ -->
+    <section class="card" id="card-history">
+      <h2>4 · Saved Sessions</h2>
+      <button class="btn btn--ghost btn--sm" id="btn-load-sessions">Load Session List</button>
+      <div id="session-list"></div>
+    </section>
+
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
