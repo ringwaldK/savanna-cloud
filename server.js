@@ -115,15 +115,14 @@ io.on('connection', (socket) => {
     io.emit('stateUpdate', publicState());
   });
 
-  // ── Admin: start session (reveals first letter) ───────────────────────────
+  // ── Admin: start session (words first, reveal starts later) ───────────────
   socket.on('startSession', () => {
     if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     if (state.phase !== 'setup' || !state.solutionWord) return;
     state.phase = 'active';
     state.startedAt = new Date().toISOString();
-    state.revealedCount = 1;   // reveal the very first letter on start
+    state.revealedCount = 0;   // wait for the first reveal until after words are entered
     io.emit('stateUpdate', publicState());
-    io.emit('letterRevealed', { revealedCount: state.revealedCount });
   });
 
   // ── Admin: add a word to the live cloud ──────────────────────────────────

@@ -101,10 +101,6 @@ body {
 
 /* Highlight the most recently revealed letter group */
 .letter-box.current {
-    color: #ffffff;
-    background: #7A8461;
-    border-color: #6B7455;
-    box-shadow: 0 0 20px rgba(122, 132, 97, 0.45);
     animation: popIn 0.45s ease-out;
 }
 
