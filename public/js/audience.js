@@ -162,30 +162,32 @@ function buildBoxes(word, revealOrder, revealedCount) {
         if (i === revealedCount - 1) currentLetter = revealOrder[i].letter.toUpperCase();
     }
 
-    // Create a box or spacer for each character
-    word.split('').forEach((char) => {
-        if (char === ' ') {
-            // Render as invisible spacer – no box
-            const spacer = document.createElement('div');
-            spacer.className = 'letter-space';
-            answerBoxes.appendChild(spacer);
-            return;
-        }
+    // Render one row per word so the answer always breaks after whitespace.
+    // Long words can still wrap inside their own row if the container is narrow.
+    const words = word.trim().split(/\s+/).filter(Boolean);
 
-        const upper = char.toUpperCase();
-        const div = document.createElement('div');
-        div.className = 'letter-box';
+    words.forEach((part) => {
+        const row = document.createElement('div');
+        row.className = 'word-row';
 
-        if (revealedLetters.has(upper)) {
-            div.textContent = upper;
-            if (upper === currentLetter) {
-                div.classList.add('revealed', 'current');
-            } else {
-                div.classList.add('revealed');
+        part.split('').forEach((char) => {
+            const upper = char.toUpperCase();
+            const div = document.createElement('div');
+            div.className = 'letter-box';
+
+            if (revealedLetters.has(upper)) {
+                div.textContent = upper;
+                if (upper === currentLetter) {
+                    div.classList.add('revealed', 'current');
+                } else {
+                    div.classList.add('revealed');
+                }
             }
-        }
 
-        answerBoxes.appendChild(div);
+            row.appendChild(div);
+        });
+
+        answerBoxes.appendChild(row);
     });
 }
 
