@@ -18,6 +18,11 @@ body {
     display: flex;
 }
 
+body.resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
 /* ── Layout ───────────────────────────────────────────────── */
 #answer-panel {
     width: 34%;
@@ -32,6 +37,18 @@ body {
     border-right: 2px solid #B5AEA6;
     padding: 28px 16px;
     background: #E8DFD5;
+    flex: 0 0 auto;
+}
+
+#panel-divider {
+    width: 10px;
+    height: 100vh;
+    flex: 0 0 10px;
+    cursor: col-resize;
+    background: linear-gradient(to right, rgba(181, 174, 166, 0.18), rgba(181, 174, 166, 0.75), rgba(181, 174, 166, 0.18));
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.45), inset -1px 0 0 rgba(0, 0, 0, 0.06);
+    position: relative;
+    z-index: 5;
 }
 
 #cloud-panel {
@@ -44,6 +61,7 @@ body {
     position: relative;
     padding: 20px;
     background: #fff5eb;
+    min-width: 220px;
 }
 
 /* ── Answer Label ─────────────────────────────────────────── */

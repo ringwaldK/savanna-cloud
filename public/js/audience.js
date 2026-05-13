@@ -5,6 +5,8 @@ const socket = io();
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const answerBoxes = document.getElementById('answer-boxes');
 const answerLabel = document.getElementById('answer-label');
+const answerPanel = document.getElementById('answer-panel');
+const panelDivider = document.getElementById('panel-divider');
 const cloudCanvas = document.getElementById('cloud-canvas');
 const cloudWrapper = document.getElementById('cloud-wrapper');
 const finishOverlay = document.getElementById('finish-overlay');
@@ -14,6 +16,43 @@ const phaseBanner = document.getElementById('phase-banner');
 // ── Local state ───────────────────────────────────────────────────────────────
 let currentState = null;
 let renderTimer = null;
+let isDraggingDivider = false;
+let resizeRaf = null;
+let pendingPanelWidth = null;
+
+const MIN_ANSWER_PANEL_WIDTH = 200;
+const MIN_CLOUD_PANEL_WIDTH = 220;
+const DIVIDER_WIDTH = 10;
+
+function getCloudRenderWords() {
+    if (!currentState) return [];
+    return currentState.phase === 'finished' ? (currentState.allWords || []) : (currentState.currentWords || []);
+}
+
+function refreshCloudForCurrentState(animate = false) {
+    if (!currentState) return;
+    const words = getCloudRenderWords();
+    renderCloud(words, animate);
+}
+
+function applyPanelWidth(widthPx) {
+    const maxWidth = window.innerWidth - MIN_CLOUD_PANEL_WIDTH - DIVIDER_WIDTH;
+    const clamped = Math.max(MIN_ANSWER_PANEL_WIDTH, Math.min(widthPx, maxWidth));
+    answerPanel.style.width = `${clamped}px`;
+    answerPanel.style.flex = '0 0 auto';
+    refreshCloudForCurrentState(false);
+}
+
+function schedulePanelResize(widthPx) {
+    pendingPanelWidth = widthPx;
+    if (resizeRaf) return;
+    resizeRaf = window.requestAnimationFrame(() => {
+        resizeRaf = null;
+        if (pendingPanelWidth != null) {
+            applyPanelWidth(pendingPanelWidth);
+        }
+    });
+}
 
 // ── Canvas sizing ─────────────────────────────────────────────────────────────
 function sizeCanvas() {
@@ -24,7 +63,28 @@ function sizeCanvas() {
 
 window.addEventListener('resize', () => {
     sizeCanvas();
-    if (currentState) renderCloud(currentState.currentWords, false);
+    if (currentState) refreshCloudForCurrentState(false);
+});
+
+if (answerPanel) {
+    applyPanelWidth(answerPanel.getBoundingClientRect().width);
+}
+
+panelDivider.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    isDraggingDivider = true;
+    document.body.classList.add('resizing');
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isDraggingDivider) return;
+    schedulePanelResize(e.clientX);
+});
+
+document.addEventListener('mouseup', () => {
+    if (!isDraggingDivider) return;
+    isDraggingDivider = false;
+    document.body.classList.remove('resizing');
 });
 
 // ── Render word cloud ─────────────────────────────────────────────────────────
