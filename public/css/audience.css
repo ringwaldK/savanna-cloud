@@ -18,6 +18,11 @@ body {
     display: flex;
 }
 
+body.resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
 /* ── Layout ───────────────────────────────────────────────── */
 #answer-panel {
     width: 34%;
@@ -32,6 +37,18 @@ body {
     border-right: 2px solid #B5AEA6;
     padding: 28px 16px;
     background: #E8DFD5;
+    flex: 0 0 auto;
+}
+
+#panel-divider {
+    width: 2px;
+    height: 100vh;
+    flex: 0 0 2px;
+    cursor: col-resize;
+    background: linear-gradient(to right, rgba(181, 174, 166, 0.18), rgba(181, 174, 166, 0.75), rgba(181, 174, 166, 0.18));
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.45), inset -1px 0 0 rgba(0, 0, 0, 0.06);
+    position: relative;
+    z-index: 5;
 }
 
 #cloud-panel {
@@ -44,6 +61,7 @@ body {
     position: relative;
     padding: 20px;
     background: #fff5eb;
+    min-width: 220px;
 }
 
 /* ── Answer Label ─────────────────────────────────────────── */
@@ -58,19 +76,21 @@ body {
 /* ── Answer Boxes ─────────────────────────────────────────── */
 #answer-boxes {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 14px;
     justify-content: center;
     align-items: flex-end;
     width: 100%;
 }
 
-/* Spacer for whitespace characters */
-.letter-space {
-    /* same width as a box but invisible – acts as word gap */
-    width: clamp(14px, 2vw, 28px);
-    height: clamp(48px, 6vw, 76px);
-    flex-shrink: 0;
+.word-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    align-items: flex-end;
+    width: 100%;
 }
 
 .letter-box {
@@ -101,10 +121,6 @@ body {
 
 /* Highlight the most recently revealed letter group */
 .letter-box.current {
-    color: #ffffff;
-    background: #7A8461;
-    border-color: #6B7455;
-    box-shadow: 0 0 20px rgba(122, 132, 97, 0.45);
     animation: popIn 0.45s ease-out;
 }
 
