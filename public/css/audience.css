@@ -1,4 +1,4 @@
-/* ── Reset & Base ─────────────────────────────────────────── */
+/* audience.css – CrossFit / arena-style Projector View */
 *,
 *::before,
 *::after {
@@ -12,9 +12,9 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #f8f1e9;
-    color: #1a1a2e;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0c0d10;
+    color: #f2f3f5;
+    font-family: 'Segoe UI', 'Arial Narrow', Arial, sans-serif;
     display: flex;
 }
 
@@ -34,19 +34,21 @@ body.resizing {
     align-items: center;
     justify-content: center;
     gap: 24px;
-    border-right: 2px solid #B5AEA6;
+    border-right: 3px solid #c8102e;
     padding: 28px 16px;
-    background: #E8DFD5;
+    background:
+        linear-gradient(rgba(12, 13, 16, 0.72), rgba(12, 13, 16, 0.78)),
+        url('/img/crossfit.jpg') center / cover no-repeat,
+        #131519;
     flex: 0 0 auto;
 }
 
 #panel-divider {
-    width: 2px;
+    width: 3px;
     height: 100vh;
-    flex: 0 0 2px;
+    flex: 0 0 3px;
     cursor: col-resize;
-    background: linear-gradient(to right, rgba(181, 174, 166, 0.18), rgba(181, 174, 166, 0.75), rgba(181, 174, 166, 0.18));
-    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.45), inset -1px 0 0 rgba(0, 0, 0, 0.06);
+    background: linear-gradient(to bottom, rgba(200, 16, 46, 0.2), rgba(200, 16, 46, 0.85), rgba(200, 16, 46, 0.2));
     position: relative;
     z-index: 5;
 }
@@ -60,17 +62,18 @@ body.resizing {
     justify-content: center;
     position: relative;
     padding: 20px;
-    background: #fff5eb;
+    background: #f4f5f7;
     min-width: 220px;
 }
 
 /* ── Answer Label ─────────────────────────────────────────── */
 #answer-label {
-    font-size: clamp(0.8rem, 1.6vw, 1.2rem);
-    font-weight: 700;
-    letter-spacing: 0.14em;
+    font-size: clamp(0.85rem, 1.8vw, 1.3rem);
+    font-weight: 900;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
-    color: #8B6F5A;
+    font-style: italic;
+    color: #c8102e;
 }
 
 /* ── Answer Boxes ─────────────────────────────────────────── */
@@ -80,7 +83,7 @@ body.resizing {
     flex-wrap: nowrap;
     gap: 14px;
     justify-content: center;
-    align-items: flex-end;
+    align-items: center;
     width: 100%;
 }
 
@@ -94,17 +97,16 @@ body.resizing {
 }
 
 .letter-box {
-    /* Auto-size so very long words still fit */
     width: clamp(28px, 4.5vw, 60px);
     height: clamp(36px, 5.5vw, 76px);
-    border: 2.5px solid #b39177;
+    border: 2.5px solid #3a3f49;
     border-radius: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: clamp(0.95rem, 3vw, 2.4rem);
-    font-weight: 800;
-    background: #ffffff;
+    font-weight: 900;
+    background: #1b1e24;
     color: transparent;
     transition: color 0.3s, background 0.4s, border-color 0.4s, box-shadow 0.4s;
     text-transform: uppercase;
@@ -112,32 +114,24 @@ body.resizing {
 }
 
 .letter-box.revealed {
-    color: #4F4F4F;
-    background: #D9D6D1;
-    border-color: #9A9288;
-    box-shadow: 0 2px 10px rgba(79, 79, 79, 0.18);
+    color: #ffffff;
+    background: #34161b;
+    border-color: #5a2028;
+    box-shadow: 0 2px 14px rgba(200, 16, 46, 0.25);
     animation: popIn 0.45s ease-out;
 }
 
-/* Highlight the most recently revealed letter group */
 .letter-box.current {
+    background: #c8102e;
+    border-color: #e11d36;
+    box-shadow: 0 0 22px rgba(200, 16, 46, 0.6);
     animation: popIn 0.45s ease-out;
 }
 
 @keyframes popIn {
-    0% {
-        transform: scale(0.5);
-        opacity: 0;
-    }
-
-    70% {
-        transform: scale(1.12);
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+    0% { transform: scale(0.5); opacity: 0; }
+    70% { transform: scale(1.12); }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 /* ── Cloud Area ───────────────────────────────────────────── */
@@ -175,8 +169,8 @@ body.resizing {
     max-height: 40%;
     object-fit: contain;
     border-radius: 12px;
-    opacity: 0.9;
-    filter: drop-shadow(0 4px 20px rgba(79, 79, 79, 0.22));
+    opacity: 0.95;
+    filter: drop-shadow(0 4px 22px rgba(0, 0, 0, 0.35));
 }
 
 /* ── Phase Banner (setup / waiting) ──────────────────────── */
@@ -185,41 +179,27 @@ body.resizing {
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(255, 253, 240, 0.92);
-    color: #7A8461;
+    background: #c8102e;
+    color: #fff;
     padding: 10px 28px;
     border-radius: 30px;
-    font-size: 1rem;
-    letter-spacing: 0.1em;
-    border: 1px solid #8B6F5A;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 2px 12px rgba(160, 123, 80, 0.1);
+    font-size: 0.95rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 800;
+    box-shadow: 0 6px 22px rgba(200, 16, 46, 0.35);
 }
 
 #phase-banner.hidden {
     display: none;
 }
 
-/* ── Decorative Elephant ─────────────────────────────────── */
+/* ── Decorative CrossFit Image (now the panel background) ─────── */
 #elephant-art {
-    position: absolute;
-    left: 14px;
-    bottom: 14px;
-    width: min(42%, 170px);
-    height: auto;
-    opacity: 0.92;
-    pointer-events: none;
-    filter: drop-shadow(0 4px 10px rgba(79, 79, 79, 0.18));
+    display: none;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.88);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.88); }
+    to { opacity: 1; transform: scale(1); }
 }

@@ -144,3 +144,4 @@ vite.config.ts.timestamp-*
 
 # all files in the sessions directory
 sessions/
+uploads/

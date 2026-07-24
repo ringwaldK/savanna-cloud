@@ -1,0 +1,139 @@
+/* upload.css – CrossFit-style upload page */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0c0d10;
+  --panel: #16181d;
+  --panel-2: #1e2127;
+  --accent: #c8102e;
+  --accent-hi: #e11d36;
+  --line: #2a2e36;
+  --text: #f2f3f5;
+  --muted: #8a909b;
+}
+
+html, body {
+  min-height: 100%;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(200,16,46,0.18), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', 'Arial Narrow', Arial, sans-serif;
+}
+
+.upload-shell {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.upload-head { text-align: center; }
+.kicker {
+  display: inline-block;
+  font-size: 0.72rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 800;
+}
+.upload-head h1 {
+  font-size: clamp(2.1rem, 9vw, 3.2rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 0.95;
+  margin: 8px 0 6px;
+  font-style: italic;
+}
+.upload-head .sub { color: var(--muted); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.8rem; }
+
+.upload-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+}
+
+.dropzone {
+  display: block;
+  border: 2px dashed #3a3f49;
+  border-radius: 14px;
+  background: var(--panel-2);
+  padding: 34px 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.dropzone:hover { border-color: var(--accent); background: #22252c; }
+.dropzone.disabled { opacity: 0.4; pointer-events: none; }
+.dropzone-inner { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); }
+.dropzone-inner span { font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text); }
+.dropzone-inner small { font-size: 0.72rem; letter-spacing: 0.16em; }
+.plus {
+  width: 58px; height: 58px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; font-weight: 700;
+  box-shadow: 0 6px 20px rgba(200,16,46,0.45);
+}
+
+.preview-wrap { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+.preview-wrap.hidden { display: none; }
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 6px;
+  padding: 6px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.preview-grid img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 700; }
+.field .opt { color: #565b64; }
+.field input {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 12px 14px;
+  font-size: 1rem;
+  outline: none;
+}
+.field input:focus { border-color: var(--accent); }
+
+.btn-upload {
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  padding: 15px;
+  font-size: 1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s;
+}
+.btn-upload:hover:not(:disabled) { opacity: 0.9; }
+.btn-upload:active:not(:disabled) { transform: scale(0.98); }
+.btn-upload:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.status { min-height: 1.2em; text-align: center; font-size: 0.9rem; font-weight: 700; }
+.status--ok { color: #4ade80; }
+.status--error { color: #ff6b6b; }

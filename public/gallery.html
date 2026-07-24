@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Wall</title>
+  <link rel="stylesheet" href="/css/gallery.css" />
+</head>
+<body>
+  <header class="gallery-head">
+    <span class="kicker" id="headline">Savanna Cloud</span>
+    <h1>The Photo Wall</h1>
+    <div class="head-row">
+      <div class="count-badge"><span id="count">0</span> pictures</div>
+      <button class="slideshow-btn" id="btn-slideshow">▶ Slideshow</button>
+    </div>
+  </header>
+
+  <main id="grid" class="grid" aria-live="polite"></main>
+
+  <div id="empty" class="empty">No pictures yet. Scan the QR code to add the first one.</div>
+
+  <div id="lightbox" class="lightbox hidden">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Close">×</button>
+    <img id="lightbox-img" src="" alt="" />
+  </div>
+
+  <div id="slideshow" class="slideshow hidden">
+    <button class="slideshow-exit" id="slideshow-exit" aria-label="Exit slideshow">×</button>
+    <button class="slideshow-nav slideshow-prev" id="slideshow-prev" aria-label="Previous">‹</button>
+    <figure class="slideshow-stage">
+      <img id="slideshow-img" src="" alt="" />
+      <figcaption id="slideshow-caption"></figcaption>
+    </figure>
+    <button class="slideshow-nav slideshow-next" id="slideshow-next" aria-label="Next">›</button>
+    <button class="slideshow-toggle" id="slideshow-toggle" aria-label="Pause">❚❚</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/gallery.js"></script>
+</body>
+</html>

@@ -28,7 +28,10 @@
       <div class="field-group" id="reveal-order-group" style="display:none">
         <label>Reveal Order <span class="hint">Drag to reorder</span></label>
         <div id="reveal-order-list"></div>
-        <button class="btn btn--ghost btn--sm" id="btn-reset-order">Reset to default order</button>
+        <div class="action-row">
+          <button class="btn btn--ghost btn--sm" id="btn-shuffle-order">🎲 Randomize order</button>
+          <button class="btn btn--ghost btn--sm" id="btn-reset-order">Reset to default order</button>
+        </div>
       </div>
 
       <div class="field-group">
@@ -116,9 +119,57 @@
       <div id="session-list"></div>
     </section>
 
+    <!-- ══ PHOTO UPLOAD / QR CARD ═════════════════════════════════════ -->
+    <section class="card" id="card-uploads">
+      <h2>5 · Photo Wall</h2>
+      <p class="hint">Scan the QR code to open the upload page on a phone. Anyone with this code can add pictures.</p>
+
+      <div class="field-group">
+        <label for="gallery-title-input">Headline <span class="hint">Shown on the upload &amp; gallery pages</span></label>
+        <div class="input-row">
+          <input id="gallery-title-input" type="text" maxlength="80" placeholder="Savanna Cloud" autocomplete="off" />
+          <button class="btn btn--primary" id="btn-save-title">Save</button>
+        </div>
+      </div>
+
+      <div id="qr-wrap">
+        <div id="qr-code"></div>
+        <div class="qr-meta">
+          <div class="field-group">
+            <label>Upload link</label>
+            <input id="upload-link" type="text" readonly value="" />
+          </div>
+          <div class="action-row">
+            <button class="btn btn--ghost btn--sm" id="btn-copy-link">Copy link</button>
+            <a class="btn btn--ghost btn--sm" id="btn-open-gallery" href="/gallery.html" target="_blank">Open gallery</a>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Uploaded pictures</span>
+            <span class="stat-value" id="stat-uploads">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ EXPORT CARD ════════════════════════════════════════════════ -->
+    <section class="card" id="card-export">
+      <h2>6 · Export Session</h2>
+      <p class="hint">Download a ZIP with the solution word, all words, the word cloud image and every uploaded picture.</p>
+      <div class="action-row">
+        <button class="btn btn--primary" id="btn-export">⬇ Download session ZIP</button>
+        <span class="hint" id="export-status"></span>
+      </div>
+    </section>
+
   </main>
 
+  <!-- Offscreen canvas used to render the word cloud image for export -->
+  <canvas id="export-canvas" width="1200" height="800" style="display:none"></canvas>
+
   <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="/js/admin.js"></script>
 </body>
 </html>

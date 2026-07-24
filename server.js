@@ -11,9 +11,11 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 const SESSIONS_DIR = path.join(__dirname, 'sessions');
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
 
-// Ensure sessions directory exists
+// Ensure runtime directories exist
 if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR);
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
 
 // ── In-memory session state ───────────────────────────────────────────────────
 let state = createFreshState();
@@ -51,6 +53,9 @@ function createFreshState() {
     allWords:      [],            // { text, ts } – every word ever typed this session
     finishImage:   null,          // base64 data-URL of finish picture
     clearedRounds: [],            // snapshot of currentWords before each clear
+    uploadToken:   uuidv4(),      // reusable token for the QR upload link
+    uploads:       [],            // { id, filename, originalName, ts } of gallery pictures
+    galleryTitle:  'Savanna Cloud', // editable headline for upload + gallery pages
     startedAt:     null,
   };
 }
@@ -71,6 +76,8 @@ function publicState() {
     currentWords:  state.currentWords,
     allWords:      state.allWords,
     finishImage:   state.finishImage,
+    uploads:       state.uploads.map((u) => ({ id: u.id, url: `/uploads/${u.filename}`, originalName: u.originalName, ts: u.ts })),
+    galleryTitle:  state.galleryTitle,
     startedAt:     state.startedAt,
   };
 }
@@ -112,6 +119,13 @@ io.on('connection', (socket) => {
   socket.on('setFinishImage', ({ dataUrl }) => {
     if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     state.finishImage = dataUrl;
+    io.emit('stateUpdate', publicState());
+  });
+
+  socket.on('setGalleryTitle', ({ title }) => {
+    if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
+    const clean = (typeof title === 'string' ? title : '').trim().slice(0, 80);
+    state.galleryTitle = clean || 'Savanna Cloud';
     io.emit('stateUpdate', publicState());
   });
 
@@ -198,8 +212,12 @@ io.on('connection', (socket) => {
 });
 
 // ── Static files ──────────────────────────────────────────────────────────────
-// Parse form bodies for login
+// Parse form bodies for login and JSON bodies for uploads (base64 data URLs)
 app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '25mb' }));
+
+// Serve uploaded gallery pictures (public)
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 // Protect admin assets and /admin route by redirecting to a login page
 app.use((req, res, next) => {
@@ -239,6 +257,80 @@ app.get('/admin-logout', (req, res) => {
   if (token) validAdminTokens.delete(token);
   res.clearCookie(ADMIN_COOKIE_NAME, { path: '/' });
   res.redirect('/admin-login.html');
+});
+
+// ── Gallery uploads API ────────────────────────────────────────────────────────
+// Admin: fetch the reusable upload token used to build the QR link
+app.get('/api/upload-token', (req, res) => {
+  if (!isRequestAuthenticated(req)) return res.status(401).json({ error: 'unauthorized' });
+  res.json({ token: state.uploadToken });
+});
+
+// Public: current display config (headline title) for upload + gallery pages
+app.get('/api/config', (_, res) => {
+  res.json({ galleryTitle: state.galleryTitle });
+});
+
+// Public: list uploaded pictures for the gallery
+app.get('/api/uploads', (_, res) => {
+  res.json(state.uploads.map((u) => ({
+    id: u.id,
+    url: `/uploads/${u.filename}`,
+    originalName: u.originalName,
+    ts: u.ts,
+  })));
+});
+
+// Upload a picture (protected by the reusable QR token, not admin login)
+const ALLOWED_IMAGE_EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' };
+app.post('/api/upload', (req, res) => {
+  const { token, dataUrl, name } = req.body || {};
+  if (!token || token !== state.uploadToken) return res.status(403).json({ error: 'invalid-token' });
+  if (typeof dataUrl !== 'string') return res.status(400).json({ error: 'no-data' });
+
+  const match = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
+  if (!match) return res.status(400).json({ error: 'bad-format' });
+  const mime = match[1];
+  const ext = ALLOWED_IMAGE_EXT[mime];
+  if (!ext) return res.status(400).json({ error: 'unsupported-type' });
+
+  const buffer = Buffer.from(match[2], 'base64');
+  if (buffer.length > 15 * 1024 * 1024) return res.status(413).json({ error: 'too-large' });
+
+  const id = uuidv4();
+  const filename = `${id}.${ext}`;
+  fs.writeFileSync(path.join(UPLOADS_DIR, filename), buffer);
+
+  const entry = {
+    id,
+    filename,
+    originalName: typeof name === 'string' ? name.slice(0, 120) : filename,
+    ts: new Date().toISOString(),
+  };
+  state.uploads.push(entry);
+
+  const publicEntry = { id: entry.id, url: `/uploads/${filename}`, originalName: entry.originalName, ts: entry.ts };
+  io.emit('uploadAdded', publicEntry);
+  io.emit('stateUpdate', publicState());
+  res.json({ ok: true, upload: publicEntry });
+});
+
+// Admin: export the full current session as JSON (words, solution, reveal order, uploads)
+app.get('/api/export', (req, res) => {
+  if (!isRequestAuthenticated(req)) return res.status(401).json({ error: 'unauthorized' });
+  res.json({
+    sessionId:     state.sessionId,
+    phase:         state.phase,
+    solutionWord:  state.solutionWord,
+    revealOrder:   state.revealOrder,
+    revealedCount: state.revealedCount,
+    allWords:      state.allWords,
+    currentWords:  state.currentWords,
+    finishImage:   state.finishImage,
+    uploads:       state.uploads.map((u) => ({ id: u.id, url: `/uploads/${u.filename}`, originalName: u.originalName, ts: u.ts })),
+    startedAt:     state.startedAt,
+    exportedAt:    new Date().toISOString(),
+  });
 });
 
 server.listen(PORT, () => {

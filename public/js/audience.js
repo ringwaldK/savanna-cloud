@@ -115,12 +115,11 @@ function renderCloud(words, animate = true) {
     const minFont = 22;
     const maxFont = Math.min(Math.floor(cloudCanvas.height * 0.2), 160);
 
-    // Darker tones so words pop on a light background
+    // Bold gym palette – reds and charcoals pop on the light cloud panel
     const palette = [
-        '#8C9273', '#717B66', '#90997F', '#7F8B82', '#6D7A6A',
-        '#7A6654', '#705848', '#8E7463', '#6F5B4C',
-        '#5F4D42', '#7C7C7A', '#6A6C6E', '#8D908F',
-        '#494949', '#5E5E5A'
+        '#C8102E', '#8A0A20', '#E11D36', '#101820', '#2B2F36',
+        '#3A3F49', '#101010', '#5A2028', '#6A6C6E', '#A50E24',
+        '#1B1E24', '#494949', '#B00C22', '#2E2E2E', '#7A0818'
     ];
 
     WordCloud(cloudCanvas, {
