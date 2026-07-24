@@ -8,6 +8,7 @@ const solutionInput    = document.getElementById('solution-input');
 const revealOrderGroup = document.getElementById('reveal-order-group');
 const revealOrderList  = document.getElementById('reveal-order-list');
 const btnResetOrder    = document.getElementById('btn-reset-order');
+const btnShuffleOrder  = document.getElementById('btn-shuffle-order');
 const finishFileInput  = document.getElementById('finish-image-input');
 const finishPreviewWrap= document.getElementById('finish-preview-wrap');
 const finishPreview    = document.getElementById('finish-preview');
@@ -100,6 +101,16 @@ function renderRevealChips() {
 btnResetOrder.addEventListener('click', () => {
   if (!solutionInput.value.trim()) return;
   buildRevealOrderUI(solutionInput.value.trim());
+});
+
+btnShuffleOrder.addEventListener('click', () => {
+  if (revealOrder.length < 2) return;
+  // Fisher–Yates shuffle of the current unique-letter order
+  for (let i = revealOrder.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [revealOrder[i], revealOrder[j]] = [revealOrder[j], revealOrder[i]];
+  }
+  renderRevealChips();
 });
 
 solutionInput.addEventListener('input', () => {
@@ -400,4 +411,161 @@ socket.on('sessionRestarted', () => {
   btnFinish.disabled = true;
   wordInput.disabled = true;
   btnAddWord.disabled= true;
+});
+
+// ── Photo wall QR code ────────────────────────────────────────────────────────
+const qrCodeEl    = document.getElementById('qr-code');
+const uploadLink  = document.getElementById('upload-link');
+const btnCopyLink = document.getElementById('btn-copy-link');
+const statUploads = document.getElementById('stat-uploads');
+let qrInstance    = null;
+
+async function initUploadQr() {
+  try {
+    const res = await fetch('/api/upload-token');
+    if (!res.ok) return;
+    const { token } = await res.json();
+    const url = `${location.origin}/upload.html?token=${encodeURIComponent(token)}`;
+    uploadLink.value = url;
+    qrCodeEl.innerHTML = '';
+    if (window.QRCode) {
+      qrInstance = new QRCode(qrCodeEl, {
+        text: url,
+        width: 180,
+        height: 180,
+        colorDark: '#101010',
+        colorLight: '#ffffff',
+      });
+    }
+  } catch (_) { /* ignore */ }
+}
+
+btnCopyLink?.addEventListener('click', async () => {
+  if (!uploadLink.value) return;
+  try {
+    await navigator.clipboard.writeText(uploadLink.value);
+    btnCopyLink.textContent = 'Copied!';
+    setTimeout(() => { btnCopyLink.textContent = 'Copy link'; }, 1500);
+  } catch (_) {
+    uploadLink.select();
+    document.execCommand('copy');
+  }
+});
+
+function updateUploadCount(state) {
+  if (statUploads) statUploads.textContent = state?.uploads?.length ?? 0;
+}
+
+socket.on('uploadAdded', () => {
+  if (currentState) {
+    currentState.uploads = [...(currentState.uploads || [])];
+  }
+});
+socket.on('stateUpdate', (state) => updateUploadCount(state));
+
+initUploadQr();
+
+// ── Session export (ZIP) ──────────────────────────────────────────────────────
+const btnExport    = document.getElementById('btn-export');
+const exportStatus = document.getElementById('export-status');
+const exportCanvas = document.getElementById('export-canvas');
+
+function setExportStatus(msg) { if (exportStatus) exportStatus.textContent = msg; }
+
+function renderCloudToCanvas(words) {
+  return new Promise((resolve) => {
+    const freq = {};
+    (words || []).forEach(({ text }) => {
+      const key = (text || '').toLowerCase();
+      if (key) freq[key] = (freq[key] || 0) + 1;
+    });
+    const list = Object.entries(freq);
+    const ctx = exportCanvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    if (!list.length || !window.WordCloud) { resolve(); return; }
+    const maxCount = Math.max(...list.map((e) => e[1]));
+    WordCloud(exportCanvas, {
+      list,
+      weightFactor: (s) => 24 + (s / maxCount) * 120,
+      fontFamily: "'Segoe UI', Arial, sans-serif",
+      fontWeight: '700',
+      color: () => ['#C8102E', '#101820', '#3A3A3A', '#6A6A6A', '#8A0A20'][Math.floor(Math.random() * 5)],
+      backgroundColor: '#ffffff',
+      rotateRatio: 0.2,
+      gridSize: 8,
+      wait: 0,
+    });
+    // wordcloud2 renders synchronously enough for a static canvas; give it a tick
+    setTimeout(resolve, 400);
+  });
+}
+
+async function dataUrlToBlob(dataUrl) {
+  const res = await fetch(dataUrl);
+  return res.blob();
+}
+
+btnExport?.addEventListener('click', async () => {
+  if (!window.JSZip) { setExportStatus('Export library not loaded.'); return; }
+  setExportStatus('Building ZIP…');
+  btnExport.disabled = true;
+  try {
+    const res = await fetch('/api/export');
+    if (!res.ok) throw new Error('export-failed');
+    const data = await res.json();
+
+    const zip = new JSZip();
+
+    // Session metadata
+    zip.file('session.json', JSON.stringify(data, null, 2));
+
+    // Solution + reveal order as readable text
+    const revealLetters = (data.revealOrder || []).map((r) => r.letter).join(' ');
+    const wordsText = (data.allWords || []).map((w) => w.text).join('\n');
+    zip.file('solution.txt',
+      `Solution word: ${data.solutionWord || '(none)'}\n` +
+      `Reveal order : ${revealLetters}\n` +
+      `Total words  : ${(data.allWords || []).length}\n`);
+    zip.file('words.txt', wordsText);
+
+    // Word cloud image
+    await renderCloudToCanvas(data.allWords || data.currentWords || []);
+    const cloudBlob = await dataUrlToBlob(exportCanvas.toDataURL('image/png'));
+    zip.file('word-cloud.png', cloudBlob);
+
+    // Finish image (if any)
+    if (data.finishImage && data.finishImage.startsWith('data:')) {
+      const ext = /image\/(\w+)/.exec(data.finishImage)?.[1] || 'png';
+      zip.file(`finish-image.${ext}`, await dataUrlToBlob(data.finishImage));
+    }
+
+    // Uploaded pictures
+    const picsFolder = zip.folder('pictures');
+    for (let i = 0; i < (data.uploads || []).length; i++) {
+      const u = data.uploads[i];
+      try {
+        const blob = await (await fetch(u.url)).blob();
+        const ext = (u.url.split('.').pop() || 'jpg').split('?')[0];
+        const safe = (u.originalName || `picture-${i + 1}`).replace(/[^\w.\-]+/g, '_');
+        picsFolder.file(`${String(i + 1).padStart(2, '0')}-${safe}.${ext}`, blob);
+      } catch (_) { /* skip unreachable file */ }
+    }
+
+    const out = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(out);
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    a.download = `session-${data.solutionWord || 'export'}-${stamp}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+    setExportStatus('Downloaded.');
+    setTimeout(() => setExportStatus(''), 3000);
+  } catch (e) {
+    setExportStatus('Export failed.');
+  } finally {
+    btnExport.disabled = false;
+  }
 });

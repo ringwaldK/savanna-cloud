@@ -46,15 +46,31 @@ Session summary
 At the end of a session, a final word cloud is generated
 Includes all words collected throughout the session
 
+Randomized reveal order
+
+The facilitator can drag letters to set a custom reveal order
+A one‑click "Randomize order" button shuffles the unique letters before the session starts
+
+Photo wall (QR upload)
+
+A QR code in the admin view links to a mobile‑friendly upload page
+Participants scan it to upload pictures from their phones
+Uploaded images are stored on disk and shown live on a public gallery page
+
+Session export
+
+The full session can be downloaded as a ZIP from the admin view
+The bundle contains the solution word, reveal order, all words, the rendered word‑cloud image, the finish picture and every uploaded photo
+
 Dual‑screen architecture
 
 Clean separation between audience display and admin controls
 Optimized for workshops, training sessions, and live facilitation
 
-Calm, neutral design
+Bold CrossFit‑style design
 
-Elephant / savannah‑inspired color palette
-High readability on large screens and projectors
+High‑contrast dark "arena" palette with a red accent
+Heavy, condensed uppercase typography built for large screens and projectors
 
 ## 🎯 Use Cases
 
@@ -117,6 +133,25 @@ Finish the session to generate the final word cloud
 - [start.ps1](start.ps1) — optional Windows start helper
 - [public](public) — static web files (HTML, JS, CSS, images)
 - [sessions](sessions) — JSON session files (runtime data)
+- `uploads/` — uploaded photo‑wall pictures (runtime data, created on first upload)
+
+### Photo wall & QR upload
+
+- Open the admin view and find the **Photo Wall** card. It shows a QR code and an upload link.
+- Participants scan the QR code (or open the link) to reach `/upload.html?token=…`, choose a photo, and upload it.
+- The link uses a reusable per‑session token, so the same QR code works for everyone until the session is restarted.
+- Uploaded pictures are written to the `uploads/` folder and appear instantly on the public gallery at `/gallery.html` (no login required to view).
+
+### Randomized reveal order
+
+- In the admin **Setup** card, enter a solution word to reveal the letter chips.
+- Drag chips to reorder them manually, or click **🎲 Randomize order** to shuffle the unique letters.
+- The chosen order is sent to the server on **Apply Setup** and used for the letter‑by‑letter reveal.
+
+### Session export
+
+- Use the **Export Session** card in the admin view to download a ZIP of the current session.
+- The archive contains `session.json`, `solution.txt`, `words.txt`, a rendered `word-cloud.png`, the finish image (if set), and a `pictures/` folder with every uploaded photo.
 
 ### Admin access and security
 
@@ -138,6 +173,7 @@ Finish the session to generate the final word cloud
 ### Notes
 
 - Session files in the `sessions` folder are plain JSON and may contain ephemeral or user session data. Do not commit sensitive session files to version control; add `sessions/` to `.gitignore` if you plan to keep local runtime data.
+- Uploaded pictures are stored in the `uploads/` folder. Add `uploads/` to `.gitignore` so participant photos are not committed to version control.
 
 ## 🤝 Contributing
 

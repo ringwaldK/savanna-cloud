@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload a Picture</title>
+  <link rel="stylesheet" href="/css/upload.css" />
+</head>
+<body>
+  <main class="upload-shell">
+    <header class="upload-head">
+      <span class="kicker">Savanna Cloud</span>
+      <h1>Drop Your Shot</h1>
+      <p class="sub">Snap it. Upload it. Hit the wall.</p>
+    </header>
+
+    <section class="upload-card" id="upload-card">
+      <label class="dropzone" id="dropzone" for="file-input">
+        <div class="dropzone-inner">
+          <div class="plus">+</div>
+          <span>Tap to choose photos</span>
+          <small>JPG · PNG · GIF · WEBP · pick several</small>
+        </div>
+        <input id="file-input" type="file" accept="image/*" capture="environment" multiple hidden />
+      </label>
+
+      <div id="preview-wrap" class="preview-wrap hidden">
+        <div id="preview-grid" class="preview-grid"></div>
+      </div>
+
+      <div class="field">
+        <label for="name-input">Your name <span class="opt">(optional)</span></label>
+        <input id="name-input" type="text" maxlength="60" placeholder="e.g. Alex" autocomplete="off" />
+      </div>
+
+      <button class="btn-upload" id="btn-upload" disabled>Upload</button>
+      <p class="status" id="status"></p>
+    </section>
+  </main>
+
+  <script src="/js/upload.js"></script>
+</body>
+</html>

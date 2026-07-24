@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Wall</title>
+  <link rel="stylesheet" href="/css/gallery.css" />
+</head>
+<body>
+  <header class="gallery-head">
+    <span class="kicker">Savanna Cloud</span>
+    <h1>The Photo Wall</h1>
+    <div class="count-badge"><span id="count">0</span> pictures</div>
+  </header>
+
+  <main id="grid" class="grid" aria-live="polite"></main>
+
+  <div id="empty" class="empty">No pictures yet. Scan the QR code to add the first one.</div>
+
+  <div id="lightbox" class="lightbox hidden">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Close">×</button>
+    <img id="lightbox-img" src="" alt="" />
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/gallery.js"></script>
+</body>
+</html>

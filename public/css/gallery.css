@@ -1,0 +1,113 @@
+/* gallery.css – CrossFit-style public photo wall */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0c0d10;
+  --panel: #16181d;
+  --accent: #c8102e;
+  --line: #2a2e36;
+  --text: #f2f3f5;
+  --muted: #8a909b;
+}
+
+html, body {
+  min-height: 100%;
+  background:
+    radial-gradient(1400px 700px at 50% -10%, rgba(200,16,46,0.16), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', 'Arial Narrow', Arial, sans-serif;
+}
+
+.gallery-head {
+  text-align: center;
+  padding: 34px 20px 22px;
+  position: sticky;
+  top: 0;
+  background: linear-gradient(to bottom, rgba(12,13,16,0.96), rgba(12,13,16,0.7));
+  backdrop-filter: blur(6px);
+  z-index: 10;
+  border-bottom: 1px solid var(--line);
+}
+.kicker {
+  font-size: 0.72rem; letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--accent); font-weight: 800;
+}
+.gallery-head h1 {
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  font-weight: 900; text-transform: uppercase; font-style: italic;
+  letter-spacing: 0.02em; margin: 6px 0 10px; line-height: 0.95;
+}
+.count-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.78rem;
+  padding: 5px 16px;
+  border-radius: 30px;
+}
+
+.grid {
+  columns: 4 240px;
+  column-gap: 14px;
+  padding: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.tile {
+  break-inside: avoid;
+  margin: 0 0 14px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  position: relative;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.tile:hover { transform: translateY(-3px); border-color: var(--accent); }
+.tile img { width: 100%; display: block; cursor: zoom-in; }
+.tile figcaption {
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.empty {
+  display: none;
+  text-align: center;
+  color: var(--muted);
+  padding: 80px 20px;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(6,7,9,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 30px;
+}
+.lightbox.hidden { display: none; }
+.lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+.lightbox-close {
+  position: absolute;
+  top: 18px; right: 24px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  cursor: pointer;
+  line-height: 1;
+}
