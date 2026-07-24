@@ -50,6 +50,29 @@ html, body {
   border-radius: 30px;
 }
 
+.head-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.slideshow-btn {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--text);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.78rem;
+  padding: 6px 16px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.slideshow-btn:hover { background: var(--accent); color: #fff; }
+
 .grid {
   columns: 4 240px;
   column-gap: 14px;
@@ -110,4 +133,91 @@ html, body {
   font-size: 1.6rem;
   cursor: pointer;
   line-height: 1;
+}
+
+/* ── Slideshow ────────────────────────────────────────────── */
+.slideshow {
+  position: fixed;
+  inset: 0;
+  background: #060709;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+.slideshow.hidden { display: none; }
+
+.slideshow-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 92vw;
+  max-height: 92vh;
+}
+.slideshow-stage img {
+  max-width: 92vw;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.7);
+  animation: slideFade 0.6s ease;
+}
+.slideshow-stage figcaption {
+  color: var(--text);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 1rem;
+}
+
+@keyframes slideFade {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.slideshow-exit {
+  position: absolute;
+  top: 20px; right: 26px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.slideshow-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border: 1px solid var(--line);
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s;
+}
+.slideshow-nav:hover { background: var(--accent); }
+.slideshow-prev { left: 22px; }
+.slideshow-next { right: 22px; }
+
+.slideshow-toggle {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
 }

@@ -77,4 +77,79 @@ socket.on('stateUpdate', (state) => {
   applyHeadline(state.galleryTitle);
 });
 
+// ── Slideshow ─────────────────────────────────────────────────────────────────
+const slideshow      = document.getElementById('slideshow');
+const slideshowImg   = document.getElementById('slideshow-img');
+const slideshowCap   = document.getElementById('slideshow-caption');
+const btnSlideshow   = document.getElementById('btn-slideshow');
+const btnExit        = document.getElementById('slideshow-exit');
+const btnPrev        = document.getElementById('slideshow-prev');
+const btnNext        = document.getElementById('slideshow-next');
+const btnToggle      = document.getElementById('slideshow-toggle');
+const SLIDE_INTERVAL = 4000;
+
+let slideIndex = 0;
+let slideTimer = null;
+let slidePaused = false;
+
+function slideList() {
+  // oldest → newest for a natural progression
+  return uploads;
+}
+
+function showSlide(i) {
+  const list = slideList();
+  if (!list.length) return;
+  slideIndex = (i + list.length) % list.length;
+  const u = list[slideIndex];
+  slideshowImg.src = u.url;
+  slideshowImg.alt = u.originalName || '';
+  slideshowCap.textContent = u.originalName || '';
+}
+
+function nextSlide() { showSlide(slideIndex + 1); }
+function prevSlide() { showSlide(slideIndex - 1); }
+
+function scheduleSlide() {
+  clearTimeout(slideTimer);
+  if (slidePaused) return;
+  slideTimer = setTimeout(() => { nextSlide(); scheduleSlide(); }, SLIDE_INTERVAL);
+}
+
+function startSlideshow() {
+  if (!uploads.length) return;
+  slideIndex = 0;
+  slidePaused = false;
+  btnToggle.textContent = '❚❚';
+  slideshow.classList.remove('hidden');
+  showSlide(0);
+  scheduleSlide();
+}
+
+function stopSlideshow() {
+  clearTimeout(slideTimer);
+  slideshow.classList.add('hidden');
+  slideshowImg.src = '';
+}
+
+function togglePause() {
+  slidePaused = !slidePaused;
+  btnToggle.textContent = slidePaused ? '▶' : '❚❚';
+  if (slidePaused) clearTimeout(slideTimer); else scheduleSlide();
+}
+
+btnSlideshow.addEventListener('click', startSlideshow);
+btnExit.addEventListener('click', stopSlideshow);
+btnToggle.addEventListener('click', togglePause);
+btnPrev.addEventListener('click', () => { prevSlide(); scheduleSlide(); });
+btnNext.addEventListener('click', () => { nextSlide(); scheduleSlide(); });
+
+document.addEventListener('keydown', (e) => {
+  if (slideshow.classList.contains('hidden')) return;
+  if (e.key === 'Escape') stopSlideshow();
+  else if (e.key === 'ArrowRight') { nextSlide(); scheduleSlide(); }
+  else if (e.key === 'ArrowLeft') { prevSlide(); scheduleSlide(); }
+  else if (e.key === ' ') { e.preventDefault(); togglePause(); }
+});
+
 loadInitial();

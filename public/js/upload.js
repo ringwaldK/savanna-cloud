@@ -11,6 +11,7 @@ const btnUpload = document.getElementById('btn-upload');
 const statusEl  = document.getElementById('status');
 
 let files = [];   // array of { dataUrl, name }
+let headlineTitle = 'Savanna Cloud';
 
 function setStatus(msg, type) {
   statusEl.textContent = msg;
@@ -49,8 +50,9 @@ if (!token) {
   try {
     const cfg = await (await fetch('/api/config')).json();
     const headlineEl = document.getElementById('headline');
-    if (headlineEl && typeof cfg.galleryTitle === 'string' && cfg.galleryTitle.trim()) {
-      headlineEl.textContent = cfg.galleryTitle;
+    if (typeof cfg.galleryTitle === 'string' && cfg.galleryTitle.trim()) {
+      headlineTitle = cfg.galleryTitle.trim();
+      if (headlineEl) headlineEl.textContent = headlineTitle;
     }
   } catch (_) { /* ignore */ }
 })();
@@ -84,7 +86,7 @@ btnUpload.addEventListener('click', async () => {
       const res = await fetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, dataUrl: f.dataUrl, name: nameInput.value.trim() || f.name }),
+        body: JSON.stringify({ token, dataUrl: f.dataUrl, name: nameInput.value.trim() || headlineTitle }),
       });
       if (!res.ok) failed++; else done++;
     } catch (_) {
