@@ -59,6 +59,7 @@ function createFreshState() {
     uploadToken:   uuidv4(),      // reusable token for the QR upload link
     uploads:       [],            // { id, filename, originalName, ts } of gallery pictures
     galleryTitle:  'Savanna Cloud', // editable headline for upload + gallery pages
+    uploadDescription: 'Add your photos to the shared wall. Pick one or more pictures from your phone and hit upload — they show up live for everyone.', // editable blurb on the upload page
     startedAt:     null,
   };
 }
@@ -79,8 +80,9 @@ function publicState() {
     currentWords:  state.currentWords,
     allWords:      state.allWords,
     finishImage:   state.finishImage,
-    uploads:       state.uploads.map((u) => ({ id: u.id, url: `/uploads/${u.filename}`, originalName: u.originalName, ts: u.ts })),
+    uploads:       state.uploads.map((u) => ({ id: u.id, url: `/uploads/${u.filename}`, originalName: u.originalName, ts: u.ts, size: u.size || 0 })),
     galleryTitle:  state.galleryTitle,
+    uploadDescription: state.uploadDescription,
     startedAt:     state.startedAt,
   };
 }
@@ -129,6 +131,12 @@ io.on('connection', (socket) => {
     if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     const clean = (typeof title === 'string' ? title : '').trim().slice(0, 80);
     state.galleryTitle = clean || 'Savanna Cloud';
+    io.emit('stateUpdate', publicState());
+  });
+
+  socket.on('setUploadDescription', ({ description }) => {
+    if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
+    state.uploadDescription = (typeof description === 'string' ? description : '').trim().slice(0, 400);
     io.emit('stateUpdate', publicState());
   });
 
@@ -271,7 +279,7 @@ app.get('/api/upload-token', (req, res) => {
 
 // Public: current display config (headline title) for upload + gallery pages
 app.get('/api/config', (_, res) => {
-  res.json({ galleryTitle: state.galleryTitle });
+  res.json({ galleryTitle: state.galleryTitle, uploadDescription: state.uploadDescription });
 });
 
 // Public: list uploaded pictures for the gallery
@@ -281,6 +289,7 @@ app.get('/api/uploads', (_, res) => {
     url: `/uploads/${u.filename}`,
     originalName: u.originalName,
     ts: u.ts,
+    size: u.size || 0,
   })));
 });
 
@@ -309,13 +318,26 @@ app.post('/api/upload', (req, res) => {
     filename,
     originalName: typeof name === 'string' ? name.slice(0, 120) : filename,
     ts: new Date().toISOString(),
+    size: buffer.length,
   };
   state.uploads.push(entry);
 
-  const publicEntry = { id: entry.id, url: `/uploads/${filename}`, originalName: entry.originalName, ts: entry.ts };
+  const publicEntry = { id: entry.id, url: `/uploads/${filename}`, originalName: entry.originalName, ts: entry.ts, size: entry.size };
   io.emit('uploadAdded', publicEntry);
   io.emit('stateUpdate', publicState());
   res.json({ ok: true, upload: publicEntry });
+});
+
+// Admin: delete an uploaded picture
+app.delete('/api/uploads/:id', (req, res) => {
+  if (!isRequestAuthenticated(req)) return res.status(401).json({ error: 'unauthorized' });
+  const idx = state.uploads.findIndex((u) => u.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'not-found' });
+  const [removed] = state.uploads.splice(idx, 1);
+  try { fs.unlinkSync(path.join(UPLOADS_DIR, removed.filename)); } catch (_) { /* already gone */ }
+  io.emit('uploadRemoved', { id: removed.id });
+  io.emit('stateUpdate', publicState());
+  res.json({ ok: true });
 });
 
 // Admin: export the full current session as JSON (words, solution, reveal order, uploads)
@@ -330,7 +352,7 @@ app.get('/api/export', (req, res) => {
     allWords:      state.allWords,
     currentWords:  state.currentWords,
     finishImage:   state.finishImage,
-    uploads:       state.uploads.map((u) => ({ id: u.id, url: `/uploads/${u.filename}`, originalName: u.originalName, ts: u.ts })),
+    uploads:       state.uploads.map((u) => ({ id: u.id, url: `/uploads/${u.filename}`, originalName: u.originalName, ts: u.ts, size: u.size || 0 })),
     startedAt:     state.startedAt,
     exportedAt:    new Date().toISOString(),
   });
