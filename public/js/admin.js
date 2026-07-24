@@ -465,6 +465,27 @@ socket.on('stateUpdate', (state) => updateUploadCount(state));
 
 initUploadQr();
 
+// ── Gallery / upload headline ─────────────────────────────────────────────────
+const galleryTitleInput = document.getElementById('gallery-title-input');
+const btnSaveTitle      = document.getElementById('btn-save-title');
+let titleDirty = false;
+
+galleryTitleInput?.addEventListener('input', () => { titleDirty = true; });
+
+btnSaveTitle?.addEventListener('click', () => {
+  const title = galleryTitleInput.value.trim();
+  socket.emit('setGalleryTitle', { title });
+  titleDirty = false;
+  btnSaveTitle.textContent = 'Saved!';
+  setTimeout(() => { btnSaveTitle.textContent = 'Save'; }, 1500);
+});
+
+socket.on('stateUpdate', (state) => {
+  if (galleryTitleInput && !titleDirty && typeof state.galleryTitle === 'string') {
+    galleryTitleInput.value = state.galleryTitle;
+  }
+});
+
 // ── Session export (ZIP) ──────────────────────────────────────────────────────
 const btnExport    = document.getElementById('btn-export');
 const exportStatus = document.getElementById('export-status');

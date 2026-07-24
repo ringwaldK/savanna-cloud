@@ -7,8 +7,15 @@ const emptyEl  = document.getElementById('empty');
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
 const lightboxClose = document.getElementById('lightbox-close');
+const headlineEl = document.getElementById('headline');
 
 let uploads = [];
+
+function applyHeadline(title) {
+  if (headlineEl && typeof title === 'string' && title.trim()) {
+    headlineEl.textContent = title;
+  }
+}
 
 function render() {
   grid.innerHTML = '';
@@ -51,6 +58,10 @@ async function loadInitial() {
     uploads = await res.json();
     render();
   } catch (_) { /* ignore */ }
+  try {
+    const cfg = await (await fetch('/api/config')).json();
+    applyHeadline(cfg.galleryTitle);
+  } catch (_) { /* ignore */ }
 }
 
 socket.on('uploadAdded', (entry) => {
@@ -63,6 +74,7 @@ socket.on('stateUpdate', (state) => {
     uploads = state.uploads;
     render();
   }
+  applyHeadline(state.galleryTitle);
 });
 
 loadInitial();

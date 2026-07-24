@@ -44,6 +44,17 @@ if (!token) {
   dropzone.classList.add('disabled');
 }
 
+// Apply the admin-configured headline
+(async () => {
+  try {
+    const cfg = await (await fetch('/api/config')).json();
+    const headlineEl = document.getElementById('headline');
+    if (headlineEl && typeof cfg.galleryTitle === 'string' && cfg.galleryTitle.trim()) {
+      headlineEl.textContent = cfg.galleryTitle;
+    }
+  } catch (_) { /* ignore */ }
+})();
+
 fileInput.addEventListener('change', async () => {
   const chosen = Array.from(fileInput.files || []).filter((f) => f.type.startsWith('image/'));
   if (!chosen.length) {

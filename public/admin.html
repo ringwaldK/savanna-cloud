@@ -123,6 +123,15 @@
     <section class="card" id="card-uploads">
       <h2>5 · Photo Wall</h2>
       <p class="hint">Scan the QR code to open the upload page on a phone. Anyone with this code can add pictures.</p>
+
+      <div class="field-group">
+        <label for="gallery-title-input">Headline <span class="hint">Shown on the upload &amp; gallery pages</span></label>
+        <div class="input-row">
+          <input id="gallery-title-input" type="text" maxlength="80" placeholder="Savanna Cloud" autocomplete="off" />
+          <button class="btn btn--primary" id="btn-save-title">Save</button>
+        </div>
+      </div>
+
       <div id="qr-wrap">
         <div id="qr-code"></div>
         <div class="qr-meta">

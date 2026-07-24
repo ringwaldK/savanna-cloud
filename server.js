@@ -55,6 +55,7 @@ function createFreshState() {
     clearedRounds: [],            // snapshot of currentWords before each clear
     uploadToken:   uuidv4(),      // reusable token for the QR upload link
     uploads:       [],            // { id, filename, originalName, ts } of gallery pictures
+    galleryTitle:  'Savanna Cloud', // editable headline for upload + gallery pages
     startedAt:     null,
   };
 }
@@ -76,6 +77,7 @@ function publicState() {
     allWords:      state.allWords,
     finishImage:   state.finishImage,
     uploads:       state.uploads.map((u) => ({ id: u.id, url: `/uploads/${u.filename}`, originalName: u.originalName, ts: u.ts })),
+    galleryTitle:  state.galleryTitle,
     startedAt:     state.startedAt,
   };
 }
@@ -117,6 +119,13 @@ io.on('connection', (socket) => {
   socket.on('setFinishImage', ({ dataUrl }) => {
     if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
     state.finishImage = dataUrl;
+    io.emit('stateUpdate', publicState());
+  });
+
+  socket.on('setGalleryTitle', ({ title }) => {
+    if (!socket.isAdmin) { socket.emit('error', 'not-authorized'); return; }
+    const clean = (typeof title === 'string' ? title : '').trim().slice(0, 80);
+    state.galleryTitle = clean || 'Savanna Cloud';
     io.emit('stateUpdate', publicState());
   });
 
@@ -255,6 +264,11 @@ app.get('/admin-logout', (req, res) => {
 app.get('/api/upload-token', (req, res) => {
   if (!isRequestAuthenticated(req)) return res.status(401).json({ error: 'unauthorized' });
   res.json({ token: state.uploadToken });
+});
+
+// Public: current display config (headline title) for upload + gallery pages
+app.get('/api/config', (_, res) => {
+  res.json({ galleryTitle: state.galleryTitle });
 });
 
 // Public: list uploaded pictures for the gallery
