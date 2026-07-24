@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: radial-gradient(900px 500px at 50% -10%, rgba(200,16,46,0.18), transparent 60%), #0c0d10; color:#f2f3f5; display:flex; align-items:center; justify-content:center; height:100vh; }
+    .card { background:#16181d; padding:30px; border-radius:12px; border-left:4px solid #c8102e; box-shadow:0 18px 50px rgba(0,0,0,0.5); width:340px; }
+    h1{font-size:1.3rem;margin:0 0 16px;text-transform:uppercase;font-style:italic;font-weight:900;letter-spacing:0.04em}
+    .err{color:#ff6b6b;font-size:.9rem;margin-bottom:10px}
+    label{display:block;margin:8px 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:#8a909b;font-weight:700}
+    input[type=password]{width:100%;padding:12px;border:1px solid #2a2e36;border-radius:8px;background:#1e2127;color:#f2f3f5;outline:none}
+    input[type=password]:focus{border-color:#c8102e}
+    button{margin-top:16px;width:100%;padding:13px;border-radius:8px;border:0;background:#c8102e;color:#fff;font-weight:800;text-transform:uppercase;letter-spacing:.12em;cursor:pointer}
+    button:hover{background:#e11d36}
+    .help{margin-top:14px;font-size:.85rem;color:#8a909b;text-align:center}
+    .help a{color:#c8102e}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Admin Login</h1>
+    <form method="POST" action="/admin-login">
+      <div id="err" class="err" style="display:none">Invalid password</div>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" />
+      <button type="submit">Sign in</button>
+    </form>
+    <div class="help"><a href="/audience.html">Open audience view</a></div>
+  </div>
+  <script>
+    // show error if ?err=1
+    if (location.search.indexOf('err=1') !== -1) document.getElementById('err').style.display = 'block';
+  </script>
+</body>
+</html>

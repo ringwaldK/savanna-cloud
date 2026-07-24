@@ -5,6 +5,8 @@ const socket = io();
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const answerBoxes = document.getElementById('answer-boxes');
 const answerLabel = document.getElementById('answer-label');
+const answerPanel = document.getElementById('answer-panel');
+const panelDivider = document.getElementById('panel-divider');
 const cloudCanvas = document.getElementById('cloud-canvas');
 const cloudWrapper = document.getElementById('cloud-wrapper');
 const finishOverlay = document.getElementById('finish-overlay');
@@ -14,6 +16,43 @@ const phaseBanner = document.getElementById('phase-banner');
 // ── Local state ───────────────────────────────────────────────────────────────
 let currentState = null;
 let renderTimer = null;
+let isDraggingDivider = false;
+let resizeRaf = null;
+let pendingPanelWidth = null;
+
+const MIN_ANSWER_PANEL_WIDTH = 200;
+const MIN_CLOUD_PANEL_WIDTH = 220;
+const DIVIDER_WIDTH = 10;
+
+function getCloudRenderWords() {
+    if (!currentState) return [];
+    return currentState.phase === 'finished' ? (currentState.allWords || []) : (currentState.currentWords || []);
+}
+
+function refreshCloudForCurrentState(animate = false) {
+    if (!currentState) return;
+    const words = getCloudRenderWords();
+    renderCloud(words, animate);
+}
+
+function applyPanelWidth(widthPx) {
+    const maxWidth = window.innerWidth - MIN_CLOUD_PANEL_WIDTH - DIVIDER_WIDTH;
+    const clamped = Math.max(MIN_ANSWER_PANEL_WIDTH, Math.min(widthPx, maxWidth));
+    answerPanel.style.width = `${clamped}px`;
+    answerPanel.style.flex = '0 0 auto';
+    refreshCloudForCurrentState(false);
+}
+
+function schedulePanelResize(widthPx) {
+    pendingPanelWidth = widthPx;
+    if (resizeRaf) return;
+    resizeRaf = window.requestAnimationFrame(() => {
+        resizeRaf = null;
+        if (pendingPanelWidth != null) {
+            applyPanelWidth(pendingPanelWidth);
+        }
+    });
+}
 
 // ── Canvas sizing ─────────────────────────────────────────────────────────────
 function sizeCanvas() {
@@ -24,7 +63,28 @@ function sizeCanvas() {
 
 window.addEventListener('resize', () => {
     sizeCanvas();
-    if (currentState) renderCloud(currentState.currentWords, false);
+    if (currentState) refreshCloudForCurrentState(false);
+});
+
+if (answerPanel) {
+    applyPanelWidth(answerPanel.getBoundingClientRect().width);
+}
+
+panelDivider.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    isDraggingDivider = true;
+    document.body.classList.add('resizing');
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isDraggingDivider) return;
+    schedulePanelResize(e.clientX);
+});
+
+document.addEventListener('mouseup', () => {
+    if (!isDraggingDivider) return;
+    isDraggingDivider = false;
+    document.body.classList.remove('resizing');
 });
 
 // ── Render word cloud ─────────────────────────────────────────────────────────
@@ -55,12 +115,11 @@ function renderCloud(words, animate = true) {
     const minFont = 22;
     const maxFont = Math.min(Math.floor(cloudCanvas.height * 0.2), 160);
 
-    // Darker tones so words pop on a light background
+    // Bold gym palette – reds and charcoals pop on the light cloud panel
     const palette = [
-        '#8C9273', '#717B66', '#90997F', '#7F8B82', '#6D7A6A',
-        '#7A6654', '#705848', '#8E7463', '#6F5B4C',
-        '#5F4D42', '#7C7C7A', '#6A6C6E', '#8D908F',
-        '#494949', '#5E5E5A'
+        '#C8102E', '#8A0A20', '#E11D36', '#101820', '#2B2F36',
+        '#3A3F49', '#101010', '#5A2028', '#6A6C6E', '#A50E24',
+        '#1B1E24', '#494949', '#B00C22', '#2E2E2E', '#7A0818'
     ];
 
     WordCloud(cloudCanvas, {
@@ -102,30 +161,32 @@ function buildBoxes(word, revealOrder, revealedCount) {
         if (i === revealedCount - 1) currentLetter = revealOrder[i].letter.toUpperCase();
     }
 
-    // Create a box or spacer for each character
-    word.split('').forEach((char) => {
-        if (char === ' ') {
-            // Render as invisible spacer – no box
-            const spacer = document.createElement('div');
-            spacer.className = 'letter-space';
-            answerBoxes.appendChild(spacer);
-            return;
-        }
+    // Render one row per word so the answer always breaks after whitespace.
+    // Long words can still wrap inside their own row if the container is narrow.
+    const words = word.trim().split(/\s+/).filter(Boolean);
 
-        const upper = char.toUpperCase();
-        const div = document.createElement('div');
-        div.className = 'letter-box';
+    words.forEach((part) => {
+        const row = document.createElement('div');
+        row.className = 'word-row';
 
-        if (revealedLetters.has(upper)) {
-            div.textContent = upper;
-            if (upper === currentLetter) {
-                div.classList.add('revealed', 'current');
-            } else {
-                div.classList.add('revealed');
+        part.split('').forEach((char) => {
+            const upper = char.toUpperCase();
+            const div = document.createElement('div');
+            div.className = 'letter-box';
+
+            if (revealedLetters.has(upper)) {
+                div.textContent = upper;
+                if (upper === currentLetter) {
+                    div.classList.add('revealed', 'current');
+                } else {
+                    div.classList.add('revealed');
+                }
             }
-        }
 
-        answerBoxes.appendChild(div);
+            row.appendChild(div);
+        });
+
+        answerBoxes.appendChild(row);
     });
 }
 
