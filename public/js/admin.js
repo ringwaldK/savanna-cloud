@@ -418,6 +418,7 @@ const qrCodeEl    = document.getElementById('qr-code');
 const uploadLink  = document.getElementById('upload-link');
 const btnCopyLink = document.getElementById('btn-copy-link');
 const statUploads = document.getElementById('stat-uploads');
+const uploadThumbs = document.getElementById('upload-thumbs');
 let qrInstance    = null;
 
 async function initUploadQr() {
@@ -453,7 +454,49 @@ btnCopyLink?.addEventListener('click', async () => {
 });
 
 function updateUploadCount(state) {
-  if (statUploads) statUploads.textContent = state?.uploads?.length ?? 0;
+  const uploads = state?.uploads ?? [];
+  const totalBytes = uploads.reduce((sum, u) => sum + (u.size || 0), 0);
+  if (statUploads) statUploads.textContent = `${uploads.length} · ${formatBytes(totalBytes)}`;
+  renderUploadThumbs(uploads);
+}
+
+function formatBytes(bytes) {
+  if (!bytes) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const val = bytes / Math.pow(1024, i);
+  return `${val.toFixed(val >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
+function renderUploadThumbs(uploads) {
+  if (!uploadThumbs) return;
+  uploadThumbs.innerHTML = '';
+  [...uploads].reverse().forEach((u) => {
+    const cell = document.createElement('div');
+    cell.className = 'thumb';
+    const img = document.createElement('img');
+    img.src = u.url;
+    img.alt = u.originalName || 'Uploaded picture';
+    img.loading = 'lazy';
+    const del = document.createElement('button');
+    del.className = 'thumb-del';
+    del.title = 'Delete picture';
+    del.textContent = '×';
+    del.addEventListener('click', () => deleteUpload(u.id));
+    cell.appendChild(img);
+    cell.appendChild(del);
+    uploadThumbs.appendChild(cell);
+  });
+}
+
+async function deleteUpload(id) {
+  try {
+    const res = await fetch(`/api/uploads/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) return;
+    if (currentState?.uploads) {
+      currentState.uploads = currentState.uploads.filter((u) => u.id !== id);
+    }
+  } catch (_) { /* ignore */ }
 }
 
 socket.on('uploadAdded', () => {
@@ -483,6 +526,26 @@ btnSaveTitle?.addEventListener('click', () => {
 socket.on('stateUpdate', (state) => {
   if (galleryTitleInput && !titleDirty && typeof state.galleryTitle === 'string') {
     galleryTitleInput.value = state.galleryTitle;
+  }
+});
+
+// ── Upload page description ───────────────────────────────────────────────────
+const uploadDescInput = document.getElementById('upload-desc-input');
+const btnSaveDesc     = document.getElementById('btn-save-desc');
+let descDirty = false;
+
+uploadDescInput?.addEventListener('input', () => { descDirty = true; });
+
+btnSaveDesc?.addEventListener('click', () => {
+  socket.emit('setUploadDescription', { description: uploadDescInput.value });
+  descDirty = false;
+  btnSaveDesc.textContent = 'Saved!';
+  setTimeout(() => { btnSaveDesc.textContent = 'Save description'; }, 1500);
+});
+
+socket.on('stateUpdate', (state) => {
+  if (uploadDescInput && !descDirty && typeof state.uploadDescription === 'string') {
+    uploadDescInput.value = state.uploadDescription;
   }
 });
 

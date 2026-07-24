@@ -133,6 +133,14 @@
         </div>
       </div>
 
+      <div class="field-group">
+        <label for="upload-desc-input">Upload description <span class="hint">Shown below the title on the upload page</span></label>
+        <textarea id="upload-desc-input" maxlength="400" rows="3" placeholder="Add a short description for the upload page…"></textarea>
+        <div class="action-row">
+          <button class="btn btn--primary btn--sm" id="btn-save-desc">Save description</button>
+        </div>
+      </div>
+
       <div id="qr-wrap">
         <div id="qr-code"></div>
         <div class="qr-meta">
@@ -146,10 +154,12 @@
           </div>
           <div class="stat-row">
             <span class="stat-label">Uploaded pictures</span>
-            <span class="stat-value" id="stat-uploads">0</span>
+            <span class="stat-value" id="stat-uploads">0 · 0 B</span>
           </div>
         </div>
       </div>
+
+      <div id="upload-thumbs" class="upload-thumbs"></div>
     </section>
 
     <!-- ══ EXPORT CARD ════════════════════════════════════════════════ -->

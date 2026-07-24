@@ -54,6 +54,12 @@ if (!token) {
       headlineTitle = cfg.galleryTitle.trim();
       if (headlineEl) headlineEl.textContent = headlineTitle;
     }
+    const descEl = document.getElementById('upload-description');
+    if (descEl) {
+      const desc = typeof cfg.uploadDescription === 'string' ? cfg.uploadDescription.trim() : '';
+      descEl.textContent = desc;
+      descEl.style.display = desc ? 'block' : 'none';
+    }
   } catch (_) { /* ignore */ }
 })();
 
